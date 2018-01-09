@@ -1,14 +1,12 @@
 {% extends 'htmllayout.html' %}
-
+{% block head %}
+<script src="static/terminal.js"></script>
+{% endblock %}
 {% block body %}
 <div class="container">
   <div class="form-group">
-    <label for="comment">Shell:</label>
-    <textarea class="form-control" rows="24" id="comment">
-IP or Domain: 
-Username: 
-Password: 
-    </textarea>
+    <label for="terminal">Shell:</label>
+    <textarea class="form-control" rows="24" id="terminal">IP or Domain:</textarea>
   </div>
 </div>
 {% endblock %}
