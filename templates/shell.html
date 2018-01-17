@@ -6,8 +6,14 @@
 {% block body %}
 <div class="container">
   <div class="form-group">
+    <label for="hostname">Hostname:</label>
+    <input type="text" class="form-control" id="hostname">
+    <label for="username">Username:</label>
+    <input type="text" class="form-control" id="username">
+    <label for="password">Password:</label>
+    <input type="password" class="form-control" id="password"> 
     <label for="terminal">Shell:</label>
-    <textarea class="form-control" rows="24" id="terminal">IP or Domain:</textarea>
+    <textarea class="form-control" rows="24" id="terminal"></textarea>
   </div>
 </div>
 {% endblock %}

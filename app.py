@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, disconnect
+from paramiko import SSHClient
 import json
 
 app = Flask(__name__)
@@ -19,12 +20,17 @@ def login(response):
     domain = data['domain']
     username = data['username']
     password = data['password']
-    print domain + username + password;
-    pass;
+    client = SSHClient();
+    client.load_system_host_keys()
+    client.connect(hostname = domain, username = username, password = password)
+    stdin, stdout, stderr = client.exec_command('ls -l');
+    socketio.emit('ssh response', stdout.read())
+    client.close();
+    disconnect();
 
 @socketio.on('connect')
 def test_connect():
-    print 'connected!!!!!!!!!!!1';
+    print "connected";
 
 if __name__ == "__main__":
     app.run(debug=True);
