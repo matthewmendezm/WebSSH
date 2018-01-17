@@ -11,24 +11,21 @@ $(document).ready(function(){
 		if(e.which == 13){
 			var lines = $(this).val().split("\n");
 			if(status == "needsIP") {
-				var IP = (lines[0].substring(ipRequestText.length, lines[0].length)).trim();
-				alert(IP);
+				IP = (lines[0].substring(ipRequestText.length, lines[0].length)).trim();
 				$(this).val($(this).val() + "\n" + usernameRequestText);
 				status = "needsUsername";
 				e.preventDefault();
 			}
 			else if (status == "needsUsername"){
-				var username = (lines[1].substring(usernameRequestText.length, lines[1].length)).trim();
-				alert(username);
+				username = (lines[1].substring(usernameRequestText.length, lines[1].length)).trim();
 	                        $(this).val($(this).val() + "\n" + passwordRequestText);
 				status = "needsPassword";
 				e.preventDefault();
 			}
 			else if (status == "needsPassword"){
 				var password = (lines[2].substring(passwordRequestText.length, lines[2].length)).trim();
-				alert(password);
 				e.preventDefault();
-				test();
+				login(IP, username, password);
 				//make ajax request with ip, name, and password
 			}
 		}
@@ -39,6 +36,22 @@ $(document).ready(function(){
 	});
 });
 
-function test(){
-
+function login(domain, username, password){
+	var socket = io.connect();
+	socket.on('connect', function(){
+		socket.emit('attemptLogin', JSON.stringify(
+			{
+				domain: domain,
+				username: username,
+				password: password
+			})
+		);
+	});
+	/* $.ajax({url: "/login", 
+		 data: {
+			 domain : domain, 
+			 username : username, 
+			 password : password
+		 }
+	 }).done(function(data){alert(data);});*/
 };
