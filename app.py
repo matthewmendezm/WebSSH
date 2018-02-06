@@ -1,17 +1,17 @@
 from flask import Flask, render_template, request, session
 from flask_socketio import SocketIO, disconnect
 from flask_session import Session
-from paramiko import SSHClient
+from ParamikoWrapper import ParamikoWrapper 
 import json
 import eventlet
-
-eventlet.monkey_patch()
-global client
+from werkzeug.contrib.cache import SimpleCache
+from multiprocessing.managers import BaseManager
+import time
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'top-secret!'
-app.config['SESSION_TYPE'] = 'filesystem'
-Session(app)
+app.debug = True
+app.config['SECRET_KEY'] = '12345'
+
 socketio = SocketIO(app, manage_session=False, async_mode='eventlet')
 
 @app.route("/")
@@ -22,35 +22,40 @@ def index():
 def about():
     return render_template("about.html");
 
+# IMPLEMENT DISCONNECT FUNCTIONALITY
+
+@socketio.on('connect')
+def connect():
+    socketio.emit('connected', {'data': 'Connected'})
+
 @socketio.on("attemptLogin")
 def login(response):
     data = json.loads(response) 
     domain = data['domain']
     username = data['username']
     password = data['password']
-    print domain + username + password
-    global client;
-    client = SSHClient();
-    client.load_system_host_keys()
-    client.connect(hostname = domain, username = username, password = password)
-    socketio.emit('logged in', 'logged in');
-
-    #OR SEND CREDENTIALS FAILED
-
-    #client.close()
-    #disconnect()
-
-@socketio.on('connect')
-def connect():
-    socketio.emit('connected', {'data': 'Connected'})
-    print "connected";
+    client = get_client(domain, username, password)
+    time.sleep(2);
+    output = client.flush_output()
+    socketio.emit('logged in', output)
 
 @socketio.on('sshCommand')
 def sendCommand(command):
-    print 'sshCommand'
-    global client;
-    stdin, stdout, stderr = client.exec_command(command);
-    socketio.emit('sshResponse', stdout.read());
+    print(command)
+    client = get_client(None, None, None)
+    client.send_input(command + '\n');
+    time.sleep(1);
+    output = client.flush_output();
+    print('output: ' + output)
+    socketio.emit('sshResponse', output);
+
+# PUT PORT IN A CONFIG FILE. Generate Auth Key
+def get_client(domain, username, password):
+    manager = BaseManager(address=('127.0.0.1', 31415), authkey=b'12345')
+    manager.register('get_shell')
+    manager.connect()
+    return manager.get_shell(domain, username, password)
 
 if __name__ == "__main__":
     socketio.run(app);
+
