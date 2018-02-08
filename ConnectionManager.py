@@ -10,6 +10,6 @@ def get_shell(domain, username, password):
 
 #PUT PORT IN A CONFIG FILE and generate auth key
 manager = BaseManager(address=('', 31415), authkey=b'12345')
-manager.register('get_shell', get_connection)
+manager.register('get_shell', get_shell)
 manager.get_server().serve_forever()
 

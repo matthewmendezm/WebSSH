@@ -45,6 +45,7 @@ def sendCommand(command):
     client = get_client(None, None, None)
     client.send_input(command + '\n');
     time.sleep(1);
+    print ('waiting')
     output = client.flush_output();
     print('output: ' + output)
     socketio.emit('sshResponse', output);

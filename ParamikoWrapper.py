@@ -14,6 +14,8 @@ class ParamikoWrapper:
 			return None
 		try:
 			self.session = self.client.invoke_shell()
+			self.session.setblocking(0)
+			self.session.settimeout(1)
 		except SSHException:
 			return None
 
@@ -24,7 +26,11 @@ class ParamikoWrapper:
 	def flush_output(self):
 		out = ''
 		while True:
-			concat = self.session.recv(10)
+			print out;
+			try:
+				concat = self.session.recv(10)
+			except:
+				return out
 			out += concat
 			if len(concat) < 10:
 				return out

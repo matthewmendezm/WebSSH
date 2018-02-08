@@ -1,7 +1,13 @@
 var promptLength = 0;
 var socket;
+var editor;
 
 $(document).ready(function(){
+
+	// Initial settings for ace editor
+    editor = ace.edit("terminal");
+    editor.renderer.setShowGutter(false);
+    editor.setShowPrintMargin(false);
 
 	// Focus on host input on page load
 	$("#hostname").focus();
@@ -36,23 +42,21 @@ $(document).ready(function(){
 
 			// When the SSH connection is established, write the first output to the screen
 			socket.on('logged in', function(output){
-				$('#terminal').val(output);
-				promptLength = getLastLineLength();
-				setCursorAtEndOfTextArea();
+				editor.setValue(output, -1)
+				setCursorAtEndOfEditor();
+				promptLength = getLastLineLengthString(output);
 				$('#terminal').keypress(function(e){
 					if(e.which == 13){
-						text = $(this).val();
-						text = text.split('\n');
-						command = text[text.length - 1];
-						command = command.substr(promptLength, command.length - promptLength);
-						sendCommand(command);
+						value = getLastLineValue();
+						command = value.substr(promptLength, value.length - promptLength);
+						sendCommand(command + '\n');
 					}
 				});
 
 				// Begin listening for further commands
 				socket.on('sshResponse', function(response){
-					$('#terminal').val($('#terminal').val() + response);
-					promptLength = getLastLineLength();
+					editor.setValue(editor.getValue() + response, -1);
+					promptLength = getLastLineLengthString(response);
 				});
 			});
 		});
@@ -64,21 +68,34 @@ function sendCommand(){
 }
 
 $('#terminal').click(function(){
-		setCursorAtEndOfTextArea();
+		setCursorAtEndOfEditor();
 	});
 });
 
-function setCursorAtEndOfTextArea()
+function setCursorAtEndOfEditor()
 {
-	$('#terminal').focus();
-	$('#terminal')[0].setSelectionRange($('#terminal').val().length + 1, $('#terminal').val().length + 1)
+	$("#terminal").focus();
+	var row = editor.getLastVisibleRow();
+	var column = editor.getSession().getLine(row).length;
+	editor.gotoLine(row + 1, column);
+}
+
+function getLastLineLengthString(output)
+{
+	output = output.split('\n');
+	output = output[output.length - 1];
+	return output.length;
 }
 
 function getLastLineLength()
 {
-	text = $('#terminal').val();
-	text = text.split('\n');
-	text = text[text.length - 1];
-	return text.length;
+	var row = editor.getLastVisibleRow();
+	return editor.getSession().getLine(row).length;
+}
+
+function getLastLineValue()
+{
+	var row = editor.getLastVisibleRow();
+	return editor.getSession().getLine(row);
 }
 
