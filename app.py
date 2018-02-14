@@ -1,12 +1,9 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template
 from flask_socketio import SocketIO, disconnect
-from flask_session import Session
 from ParamikoWrapper import ParamikoWrapper 
 import json
 import eventlet
-from werkzeug.contrib.cache import SimpleCache
 from multiprocessing.managers import BaseManager
-import time
 
 app = Flask(__name__)
 app.debug = True
@@ -35,19 +32,14 @@ def login(response):
     username = data['username']
     password = data['password']
     client = get_client(domain, username, password)
-    time.sleep(2);
     output = client.flush_output()
     socketio.emit('logged in', output)
 
 @socketio.on('sshCommand')
 def sendCommand(command):
-    print(command)
     client = get_client(None, None, None)
     client.send_input(command + '\n');
-    time.sleep(1);
-    print ('waiting')
     output = client.flush_output();
-    print('output: ' + output)
     socketio.emit('sshResponse', output);
 
 # PUT PORT IN A CONFIG FILE. Generate Auth Key

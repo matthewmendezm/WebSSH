@@ -2,7 +2,7 @@ var promptLength = 0;
 var socket;
 var editor;
 
-$(document).ready(function(){
+$(document).ready(function() {
 
 	// Initial settings for ace editor
     editor = ace.edit("terminal");
@@ -42,8 +42,9 @@ $(document).ready(function(){
 
 			// When the SSH connection is established, write the first output to the screen
 			socket.on('logged in', function(output){
-				editor.setValue(output, -1)
-				setCursorAtEndOfEditor();
+				editor.focus();
+				editor.setValue(output, 1)
+				editor.scrollToRow(100000)
 				promptLength = getLastLineLengthString(output);
 				$('#terminal').keypress(function(e){
 					if(e.which == 13){
@@ -55,8 +56,9 @@ $(document).ready(function(){
 
 				// Begin listening for further commands
 				socket.on('sshResponse', function(response){
-					editor.setValue(editor.getValue() + response, -1);
+					editor.setValue(editor.getValue() + response, 1);
 					promptLength = getLastLineLengthString(response);
+					editor.scrollToRow(100000)
 				});
 			});
 		});
@@ -74,7 +76,6 @@ $('#terminal').click(function(){
 
 function setCursorAtEndOfEditor()
 {
-	$("#terminal").focus();
 	var row = editor.getLastVisibleRow();
 	var column = editor.getSession().getLine(row).length;
 	editor.gotoLine(row + 1, column);

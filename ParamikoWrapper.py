@@ -26,7 +26,6 @@ class ParamikoWrapper:
 	def flush_output(self):
 		out = ''
 		while True:
-			print out;
 			try:
 				concat = self.session.recv(10)
 			except:
