@@ -1,0 +1,19 @@
+    
+
+    body {
+        background-color: #7c7d7d;
+    }
+
+    .form-control {
+        background: #1a1a1a;
+        color: #39e600;
+    }
+
+    #terminal { 
+        border: 1px solid lightgray;
+        margin: auto;
+        height: 500px;
+        width: 100%;
+        background-color: #1a1a1a;
+        color:#39e600;
+    }

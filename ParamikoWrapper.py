@@ -13,9 +13,10 @@ class ParamikoWrapper:
 		except:
 			return None
 		try:
+			self.session = self.client.get_pty()
 			self.session = self.client.invoke_shell()
 			self.session.setblocking(0)
-			self.session.settimeout(1)
+			self.session.settimeout(.25)
 		except SSHException:
 			return None
 
@@ -27,11 +28,10 @@ class ParamikoWrapper:
 		out = ''
 		while True:
 			try:
-				concat = self.session.recv(10)
+				concat = self.session.recv(10000)
+				out += concat
 			except:
-				return out
-			out += concat
-			if len(concat) < 10:
+				print out
 				return out
 
 	def __del__(self):

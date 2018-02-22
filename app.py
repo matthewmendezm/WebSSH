@@ -7,6 +7,8 @@ from multiprocessing.managers import BaseManager
 
 app = Flask(__name__)
 app.debug = True
+
+# Might want to generate random secret key.
 app.config['SECRET_KEY'] = '12345'
 
 socketio = SocketIO(app, manage_session=False, async_mode='eventlet')
@@ -14,10 +16,6 @@ socketio = SocketIO(app, manage_session=False, async_mode='eventlet')
 @app.route("/")
 def index():
     return render_template("shell.html"); 
-
-@app.route("/about/")
-def about():
-    return render_template("about.html");
 
 # IMPLEMENT DISCONNECT FUNCTIONALITY
 
@@ -28,18 +26,16 @@ def connect():
 @socketio.on("attemptLogin")
 def login(response):
     data = json.loads(response) 
-    domain = data['domain']
-    username = data['username']
-    password = data['password']
-    client = get_client(domain, username, password)
+    client = get_client(data['domain'], data['username'], data['password'])
     output = client.flush_output()
     socketio.emit('logged in', output)
 
 @socketio.on('sshCommand')
-def sendCommand(command):
-    client = get_client(None, None, None)
-    client.send_input(command + '\n');
+def send_command(command):
+    client = get_client(None, None, None) 
+    client.send_input(command);
     output = client.flush_output();
+    output = output[len(command) + 1:]
     socketio.emit('sshResponse', output);
 
 # PUT PORT IN A CONFIG FILE. Generate Auth Key

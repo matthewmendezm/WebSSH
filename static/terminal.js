@@ -2,12 +2,16 @@ var promptLength = 0;
 var socket;
 var editor;
 
+// broken backslash
+var shiftSpecialChar = {190 : '.', 188 : ',', 191 : '/', 220 : '\\', };
+
 $(document).ready(function() {
 
 	// Initial settings for ace editor
     editor = ace.edit("terminal");
     editor.renderer.setShowGutter(false);
     editor.setShowPrintMargin(false);
+    editor.getSession().setMode('ace/mode/text');
 
 	// Focus on host input on page load
 	$("#hostname").focus();
@@ -20,7 +24,7 @@ $(document).ready(function() {
 	});
 
 	// Move cursor to password textbox when enter is pressed in username
-	$("#username").on('keyup', function (e) {
+	$("#username").on('keypress', function (e) {
 		if (e.keyCode == 13) {
 			$("#password").focus();
 		}
@@ -46,16 +50,24 @@ $(document).ready(function() {
 				editor.setValue(output, 1)
 				editor.scrollToRow(100000)
 				promptLength = getLastLineLengthString(output);
-				$('#terminal').keypress(function(e){
-					if(e.which == 13){
-						value = getLastLineValue();
-						command = value.substr(promptLength, value.length - promptLength);
-						sendCommand(command + '\n');
-					}
-				});
 
 				// Begin listening for further commands
+				$('#terminal').keyup(function(e){
+					var key = convertKeyPress(e);
+					sendCommand(key);
+					/*if(e.which == 13){
+						value = getLastLineValue();
+						command = value.substr(promptLength, value.length - promptLength);
+						sendCommand(command);
+					}
+					else if (convertKeyPress(e) == 'a')
+						sendCommand('\e[B');
+					*/
+				});
+
+				// Begin listening responses from the socket
 				socket.on('sshResponse', function(response){
+					response = replaceANSICodes(response);
 					editor.setValue(editor.getValue() + response, 1);
 					promptLength = getLastLineLengthString(response);
 					editor.scrollToRow(100000)
@@ -65,7 +77,7 @@ $(document).ready(function() {
 	};
 });
 
-function sendCommand(){
+function sendCommand(command){
 	socket.emit('sshCommand', command);
 }
 
@@ -76,6 +88,7 @@ $('#terminal').click(function(){
 
 function setCursorAtEndOfEditor()
 {
+	editor.focus();
 	var row = editor.getLastVisibleRow();
 	var column = editor.getSession().getLine(row).length;
 	editor.gotoLine(row + 1, column);
@@ -88,15 +101,37 @@ function getLastLineLengthString(output)
 	return output.length;
 }
 
-function getLastLineLength()
-{
-	var row = editor.getLastVisibleRow();
-	return editor.getSession().getLine(row).length;
-}
-
 function getLastLineValue()
 {
 	var row = editor.getLastVisibleRow();
-	return editor.getSession().getLine(row);
+	return editor.getSession().getLine(row - 1);
+}
+
+function replaceANSICodes(string)
+{
+	var string = string.replace(new RegExp("\\x1b", "g"), "");
+	return string.replace(new RegExp("\\[[^m]*m", "g"), "");
+}
+
+function convertKeyPress(e)
+{
+	var code = e.which;
+	if(code >= 65 && code <= 90)
+	{
+		var char = String.fromCharCode(code);
+		if(!e.shiftKey)
+			char = char.toLowerCase();
+	}
+	else if(code >= 188)
+		return shiftSpecialChar[code];
+	else if(code == 13)
+		return '\n';
+	else if (code == 32)
+		return ' ';
+	else if (code == 38)
+		return '\e\[A';
+	else if (code == 8)
+		return '\x01\x11';
+	return char;
 }
 
