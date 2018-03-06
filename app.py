@@ -25,8 +25,12 @@ def connect():
 
 @socketio.on("attemptLogin")
 def login(response):
+    print 'attemptLogin'
     data = json.loads(response) 
     client = get_client(data['domain'], data['username'], data['password'])
+    if not client.is_connected():
+        socketio.emit('login failed')
+        return;
     output = client.flush_output()
     socketio.emit('logged in', output)
 

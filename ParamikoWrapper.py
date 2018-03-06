@@ -10,15 +10,18 @@ class ParamikoWrapper:
 		# Research more meaningful exceptions to catch
 		try:
 			self.client.connect(hostname = hostname, username = username, password = password)
+			self.client.connected = True
 		except:
-			return None
+			self.client.connected = False
+			return
+
 		try:
-			self.session = self.client.get_pty()
 			self.session = self.client.invoke_shell()
 			self.session.setblocking(0)
 			self.session.settimeout(.25)
-		except SSHException:
-			return None
+		except:
+			self.client.connected = False
+			pass
 
 	
 	def send_input(self, input):
@@ -33,6 +36,9 @@ class ParamikoWrapper:
 			except:
 				print out
 				return out
+
+	def is_connected(self):
+		return self.client.connected;
 
 	def __del__(self):
 		self.client.close()
