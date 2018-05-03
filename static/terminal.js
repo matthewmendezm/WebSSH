@@ -151,7 +151,7 @@ function convertKeyPress(e)
 	return char;
 }
 
-function sendCommand(command){
-	socket.emit('sshCommand', command);
+function sendCommand(keyPress){
+	socket.emit('sshKeyPress', keyPress);
 }
 

@@ -34,7 +34,6 @@ class ParamikoWrapper:
 				concat = self.session.recv(10000)
 				out += concat
 			except:
-				print out
 				return out
 
 	def is_connected(self):

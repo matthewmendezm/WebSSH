@@ -2,11 +2,10 @@ from multiprocessing.managers import BaseManager
 from ParamikoWrapper import ParamikoWrapper 
 
 connection = {};
-# connection manager only seems to work for one single registered function at a time.
-def get_shell(domain, username, password):
-	if(domain != None):
-		connection['connection'] = ParamikoWrapper(domain, username, password)
-	return connection['connection']
+def get_shell(domain, username, password, sid):
+	if sid not in connection and domain != None and username != None and password != None:
+		connection[sid] = ParamikoWrapper(domain, username, password)
+	return connection[sid]
 
 #PUT PORT IN A CONFIG FILE and generate auth key
 manager = BaseManager(address=('', 31415), authkey=b'12345')
